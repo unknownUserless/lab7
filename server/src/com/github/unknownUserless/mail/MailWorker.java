@@ -17,6 +17,7 @@ public class MailWorker {
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.port", "465");
         props.put("mail.smtp.socketFactory.port", "465");
+        props.put("mail.smtp.connectiontimeout", "1000");
         props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         this.session = Session.getDefaultInstance(props, new Authenticator() {
             @Override
@@ -26,9 +27,9 @@ public class MailWorker {
         });
     }
 
-
     public boolean send(String theme, String message, String toEmail) {
         Message msg = new MimeMessage(session);
+
         try {
             msg.setFrom(new InternetAddress(login));
             msg.setRecipient(Message.RecipientType.TO, new InternetAddress(toEmail));
@@ -36,6 +37,7 @@ public class MailWorker {
             msg.setText(message);
 
             Transport.send(msg);
+
             return true;
 
         } catch (Exception e) {

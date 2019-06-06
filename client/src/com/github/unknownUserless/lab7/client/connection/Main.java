@@ -25,53 +25,58 @@ public class Main {
     private static SocketAddress serverAddress;
     private static CommandManager manager;
 
-    public static void main(String[] args) throws SocketException, UnknownHostException {
-        addAll();
-        System.out.println(spaceship.toString());
-        spaceship.landing();
-        // Подключение к серверу
-        connector = new Connector();
-        console = new Console();
+    public static void main(String[] args) throws UnknownHostException, SocketTimeoutException {
+        try {
+            addAll();
+            System.out.println(spaceship.toString());
+            spaceship.landing();
+            // Подключение к серверу
+            connector = new Connector();
+            console = new Console();
 
-        File file = new File(System.getenv("file"));
+            File file = new File(System.getenv("file"));
 
-        manager = new CommandManager(console, file);
+            manager = new CommandManager(console, file);
 
-        connection();
+            connection();
 
-        boolean cont = false;
+            boolean cont = false;
 
-        System.out.println("Для получения справки по командам воспользуйтесь командой help");
-        do {
-            CommandPack packToSend = manager.getCommandPack();
-            if (packToSend != null) {
-                try {
-                    if (packToSend.command.equals("cont")){
-                        cont = true;
-                        continue;
+            System.out.println("Для получения справки по командам воспользуйтесь командой help");
+            do {
+                CommandPack packToSend = manager.getCommandPack();
+                if (packToSend != null) {
+                    try {
+                        if (packToSend.command.equals("cont")) {
+                            cont = true;
+                            continue;
+                        }
+
+                        if (packToSend.command.equals("connect")) Main.connect();
+                        connector.sender.send(packToSend);
+
+                        CommandRespondPack receivedPack = (CommandRespondPack) connector.receiver.receiveObj(10000);
+                        System.out.println(receivedPack.getRespond());
+
+                        if (packToSend.command.equals("exit")) {
+                            Main.connect();
+                        }
+                    } catch (SocketTimeoutException e) {
+                        System.out.println("Ответ не получен, повторите попытку");
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
                     }
-
-                    if (packToSend.command.equals("connect")) Main.connect();
-                    connector.sender.send(packToSend);
-
-                    CommandRespondPack receivedPack = (CommandRespondPack)connector.receiver.receiveObj(10000);
-                    System.out.println(receivedPack.getRespond());
-
-                    if (packToSend.command.equals("exit")){
-                        Main.connect();
-                    }
-                } catch (SocketTimeoutException e){
-                    System.out.println("Ответ не получен, повторите попытку");
-                } catch (ClassNotFoundException e){
-                    e.printStackTrace();
+                } else {
+                    System.out.println("Попробуйте ввести команду по-другому");
                 }
-            } else {
-                System.out.println("Попробуйте ввести команду по-другому");
-            }
 
-        } while (!cont);
+            } while (!cont);
 
-        System.out.println("THE END");
+            System.out.println("THE END");
+
+        } catch (Throwable e){
+            e.printStackTrace();
+        }
     }
 
     private static void addAll() {
@@ -91,7 +96,7 @@ public class Main {
     public static void connection() {
         try {
             connect(); // Подключение (обмен адресами сокетов)
-            logreg(); // Регистрация/вход
+            logreg();
         } catch (UnknownHostException e) {
             e.printStackTrace();
             System.exit(-2);
@@ -113,34 +118,41 @@ public class Main {
         System.out.println(pack.respond);
     }
 
-    private static void logreg() throws ClassNotFoundException, SocketTimeoutException {
+    private static void logreg() throws ClassNotFoundException {
 
         Packet pack = SomeAnalyzer.connect();
         boolean registration = pack instanceof RegistrationPack;
 
         connector.sender.send(pack); //Отправили пакет регистрации/логина
-        AuthorizationRespondPack respond =
-                (AuthorizationRespondPack) connector.receiver.receiveObj(2000); //Приняли ответ с сервера
-        if (registration) {
+        try {
+            AuthorizationRespondPack respond =
+                    (AuthorizationRespondPack) connector.receiver.receiveObj(8000); //Приняли ответ с сервера
 
-            if (respond.success) {
-                System.out.println("Успешная регистрация, пароль отправлен на почту, указанную при регистрации");
+            if (registration) {
+
+                if (respond.success) {
+                    System.out.println("Успешная регистрация, пароль отправлен на почту, указанную при регистрации");
+                } else {
+                    System.out.println("Логин или почта уже используется, попробуйте вспомнить логин и пароль\n" +
+                            "или используйте другие данные для регистрации");
+                    logreg();
+                }
+
             } else {
-                System.out.println("Логин или почта уже используется, попробуйте вспомнить логин и пароль\n" +
-                        "или используйте другие данные для регистрации");
-                logreg();
+
+                if (respond.success) {
+                    System.out.println("Вы успешно залогинились");
+                } else {
+                    System.out.println("Введен неверный логин/пароль, попробуйте еще раз");
+                    logreg();
+                }
+
             }
 
-        } else {
-
-            if (respond.success) {
-                System.out.println("Вы успешно залогинились");
-            } else {
-                System.out.println("Введен неверный логин/пароль, попробуйте еще раз");
-                logreg();
-            }
-
+        } catch (SocketTimeoutException e){
+            System.out.println("Проблемы с регистрацией/входом");
         }
+
 
 
     }

@@ -8,7 +8,6 @@ import com.github.unknownUserless.lab7.client.connection.packets.respond.Authori
 import com.github.unknownUserless.lab7.client.connection.packets.respond.ConnectRespondPack;
 import com.github.unknownUserless.lab7.server.PasswordMaker;
 import com.github.unknownUserless.lab7.server.collection.Collection;
-import com.github.unknownUserless.lab7.server.commands.SquadsExecutor;
 import com.github.unknownUserless.lab7.server.sql.JDBCWorker;
 import com.github.unknownUserless.lab7.server.sql.User;
 import com.github.unknownUserless.lab7.server.sql.UserCard;
@@ -21,9 +20,6 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Main {
 
@@ -32,11 +28,12 @@ public class Main {
     private static int mainPort;
     private static JDBCWorker database;
     private static MailWorker email;
-    private static ConcurrentHashMap<String, SelectionKey> currentConnections;
+    private static Map<String, SelectionKey> currentConnections;
 
-    public static ConcurrentHashMap<String, SelectionKey> getCurrentConnections(){
+    public static Map<String, SelectionKey> getCurrentConnections(){
         return currentConnections;
     }
+
 
 
     private static final String regFormat = "Вы успешно зарегестрировались\n" +
@@ -46,7 +43,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         Collection.loadSqads();
-        currentConnections = new ConcurrentHashMap<>();
+        currentConnections = new HashMap<>();
         email = new MailWorker();
         database = JDBCWorker.instance();
         selector = Selector.open();
@@ -95,7 +92,7 @@ public class Main {
         connector.channel.register(selector, SelectionKey.OP_READ, connector);
     }
 
-    private static boolean handleLogin(SelectionKey key, LoginPack pack) throws IOException, ClassNotFoundException{
+    private static boolean handleLogin(SelectionKey key, LoginPack pack) {
         Connector connector = (Connector)key.attachment();
 
         User user = database.users().get(pack.login);
@@ -123,12 +120,14 @@ public class Main {
         }
         AuthorizationRespondPack respondPack = new AuthorizationRespondPack(success);
         ((Connector)key.attachment()).sender.send(respondPack);
-        SelectionKey oldKey = currentConnections.get(((Connector) key.attachment()).getUser().login());
-        if (oldKey != null){
-            oldKey.channel().close();
-            oldKey.cancel();
-        }
         if (success){
+
+            SelectionKey oldKey = currentConnections.get(((Connector) key.attachment()).getUser().login());
+            if (oldKey != null){
+                oldKey.channel().close();
+                oldKey.cancel();
+            }
+
             ((Connector)key.attachment()).setStatus(Connector.Status.COMMANDS);
             currentConnections.put(((Connector) key.attachment()).getUser().login(), key);
         }

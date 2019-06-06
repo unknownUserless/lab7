@@ -32,7 +32,11 @@ public class SquadCommands {
     private static final CommandRespondPack JSONHELP =
             new CommandRespondPack("fulljson - объект в формате json,\n" +
                     "который содержит все необходимые ключи и значения.\n" +
-                    "shortjson - может содержать только имя");
+                    "shortjson - может содержать только имя\n"+
+                    "Пример fulljson = {\"name\":\"example\", " +
+                    "\"members\":[{\"name\":\"Name\", \"prof\":\"MECHANIC\"}], " +
+                    "\"location\":\"MOON\"} (Локацию можно не указывать)\n" +
+                    "Пример shortjson = {\"name\":\"example\"}");
 
     private SquadCommands() {
     }
@@ -166,29 +170,6 @@ public class SquadCommands {
         return res;
     }
 
-    @Command(names = {"get"}, description = "Позволяет получить отряд с сервера",
-            arguments = "fulljson/shortjson")
-    private static CommandRespondPack get(Pair<CommandPack, User> pair) {
-        Squad squad = null;
-        try {
-            squad = squad(pair.element().arguments);
-        } catch (IllegalArgumentException e) {
-            try {
-                JsonObject o = new JsonParser().parse(pair.element().arguments).getAsJsonObject();
-                squad = Collection.collection.stream().map(Pair::element).filter(s -> s.getName().
-                        equals(o.get("name").getAsString())).findFirst().orElse(null);
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
-        }
-        CommandRespondPack pack;
-        pack = squad == null ? new CommandRespondPack("Отряд не найден") :
-                new CommandRespondPack("Отряд " + squad.toString() +
-                        " найден и отправлен");
-        pack.setSquad(squad);
-        return pack;
-    }
-
     @Command(names = {"exit"}, description = "Выход клинта из системы")
     private static CommandRespondPack exit(Pair<CommandRespondPack, User> pair) throws IOException {
         SelectionKey key = Main.getCurrentConnections().get(pair.attachment().login());
@@ -259,7 +240,7 @@ public class SquadCommands {
                 case "EARTH":
                     location = Earth.instance();
                     break;
-                case "Mars":
+                case "MARS":
                     location = Mars.instance();
                     break;
                 default:

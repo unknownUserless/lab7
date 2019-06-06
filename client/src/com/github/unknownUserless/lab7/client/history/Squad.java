@@ -1,7 +1,5 @@
 package com.github.unknownUserless.lab7.client.history;
 
-import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -9,7 +7,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.IntStream;
 
-public class Squad implements Comparable<Squad>, Serializable {
+public class Squad implements Comparable<Squad> {
 
     private Location location;
     private String research;

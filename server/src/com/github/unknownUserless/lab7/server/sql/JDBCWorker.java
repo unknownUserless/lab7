@@ -9,9 +9,12 @@ import java.sql.SQLException;
 
 public class JDBCWorker {
 
-    private final String DB_URL = "jdbc:postgresql://pg:5432/studs";
+    /*private final String DB_URL = "jdbc:postgresql://pg:5432/studs";
     private final String USER = "s263937";
-    private final String PASS = "sms970";
+    private final String PASS = "sms970";*/
+    private final String DB_URL = "jdbc:postgresql://localhost:5432/lab7";
+    private final String USER = "vlados";
+    private final String PASS = "123";
     private static JDBCWorker instance;
 
     public static JDBCWorker instance(){
@@ -30,7 +33,7 @@ public class JDBCWorker {
         try {
             Class.forName("org.postgresql.Driver");
             connection = DriverManager.getConnection(DB_URL, USER, PASS);
-            System.out.println(connection.toString());
+            System.out.println("The database connection was successful");
         } catch (SQLException | ClassNotFoundException e){
             e.printStackTrace();
         }

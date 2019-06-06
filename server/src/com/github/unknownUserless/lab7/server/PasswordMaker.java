@@ -1,6 +1,5 @@
 package com.github.unknownUserless.lab7.server;
 
-import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
@@ -20,7 +19,7 @@ public class PasswordMaker {
             return builder.toString();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
-            return null;
+            return "";
         }
     }
 

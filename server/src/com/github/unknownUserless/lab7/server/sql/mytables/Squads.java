@@ -134,8 +134,8 @@ public class Squads {
 
     @Override
     public String toString(){
-        try(Statement st = connection.createStatement()){
-            ResultSet set = st.executeQuery("SELECT * FROM squads");
+        try(Statement st = connection.createStatement();
+            ResultSet set = st.executeQuery("SELECT * FROM squads")){
             return SQLUtils.getTableAsString(set);
         } catch (SQLException e){
             e.printStackTrace();

@@ -8,39 +8,45 @@ import com.github.unknownUserless.wrappers.Pair;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class SquadsExecutor {
 
-    private List<Method> methods;
+    private Map<String, Method> methods;
 
 
     public SquadsExecutor() {
-        this.methods = Arrays.stream(SquadCommands.class.getDeclaredMethods()).
-                filter( m -> m.isAnnotationPresent(Command.class)).collect(Collectors.toList());
-    }
-
-    public CommandRespondPack execute(Pair<CommandPack, User> args) {
-        for (Method m : methods) {
-            if (m.isAnnotationPresent(Command.class)) {
+        methods = new HashMap<>();
+        for (Method m: SquadCommands.class.getDeclaredMethods()){
+            if (m.isAnnotationPresent(Command.class)){
+                m.setAccessible(true);
                 Command command = m.getAnnotation(Command.class);
-                if (Arrays.asList(command.names()).contains(args.element().command)) {
-                    try {
-                        m.setAccessible(true);
-                        CommandRespondPack respondPack = (CommandRespondPack) m.invoke(null, args);
-
-                        return respondPack;
-
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                        return null;
-                    }
+                if (command.names().length == 0) throw new RuntimeException("Проверьте аннотации" +
+                        "в классе " + SquadCommands.class.getSimpleName());
+                for (String name: command.names()){
+                    this.methods.put(name, m);
                 }
             }
         }
-        return new CommandRespondPack("Команда " + args.element().command + " не найдена," +
-                "чтобы получить справку по командам, введите help");
+    }
+
+    public CommandRespondPack execute(Pair<CommandPack, User> args) {
+
+        Method m = methods.get(args.element().command);
+
+        if (m != null){
+            try {
+                return (CommandRespondPack) m.invoke(null, args);
+            } catch (InvocationTargetException | IllegalAccessException e){
+                return new CommandRespondPack("Произошла ошибка на сервере: " + e.getMessage());
+            }
+        } else {
+            return new CommandRespondPack("Команда " + args.element().command + " не найдена," +
+                    "чтобы получить справку по командам, введите help");
+        }
     }
 
 }

@@ -15,7 +15,7 @@ public class Connector implements Closeable {
         return socket.getLocalSocketAddress();
     }
 
-    public Connector() throws SocketException {
+    public Connector()  throws SocketException {
         this.socket = new DatagramSocket();
         this.socket.setSoTimeout(4000);
     }
@@ -86,10 +86,12 @@ public class Connector implements Closeable {
 
         private DatagramPacket receivePack(int capacity) throws SocketTimeoutException {
             try {
+                capacity = 10000;
                 DatagramPacket packet = new DatagramPacket(new byte[capacity], capacity);
                 socket.receive(packet);
                 return packet;
             }  catch (IOException e){
+                if (e instanceof SocketTimeoutException) throw (SocketTimeoutException)e;
                 e.printStackTrace();
                 return null;
             }
