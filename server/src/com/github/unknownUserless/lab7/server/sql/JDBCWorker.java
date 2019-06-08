@@ -10,11 +10,11 @@ import java.sql.SQLException;
 public class JDBCWorker {
 
     /*private final String DB_URL = "jdbc:postgresql://pg:5432/studs";
-    private final String USER = "s263937";
-    private final String PASS = "sms970";*/
+    private final String USER = "";
+    private final String PASS = "";*/
     private final String DB_URL = "jdbc:postgresql://localhost:5432/lab7";
-    private final String USER = "vlados";
-    private final String PASS = "123";
+    private final String USER = "";
+    private final String PASS = "";
     private static JDBCWorker instance;
 
     public static JDBCWorker instance(){
