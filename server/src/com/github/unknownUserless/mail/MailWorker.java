@@ -6,8 +6,8 @@ import javax.mail.internet.MimeMessage;
 
 public class MailWorker {
 
-    private static final String login = "uselessperson@bk.ru";
-    private static final String password = "someuselesspass";
+    private static final String login = "";
+    private static final String password = "";
 
     private Session session;
 
